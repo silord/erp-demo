@@ -1,0 +1,296 @@
+syntax = "proto3";
+import "common.proto";
+
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc.Customer";
+
+// 客户管理
+service Customer {
+    //获取客户分类
+    rpc PageCustomerClassifyList (G_BaseInfoRequest) returns (G_PageCustomerClassifyResponse);
+
+    //同步客户信息
+    rpc CustomerSynchro(G_CustomerSynchroRequest) returns(G_CustomerSynchroListResponse);
+
+    //拉取ERP客户 G_PageCustomerPullTaskResponse
+    rpc CustomerPullTask(G_CustomerPullTaskRequest) returns(G_PushResponse);
+
+    //与ERP客户匹配
+    rpc CustomerMatchingList(G_CustomerMatchingListRequest) returns(G_CustomerMatchingListResponse);
+
+    //增量推送客户、联系人 G_PageCustomerPullTaskResponse  G_PagelinkInfoResponse
+    rpc PushCustomer(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送客户销售统计  G_PageCustomerSaleReportResponse
+    rpc PushCustomerSaleReport(G_PushRequest) returns(G_PushResponse);
+
+    //根据客户ID集合获取客户列表信息
+    rpc GetCustomerQueryList(G_CustomerQueryRequest) returns(G_PageCustomerQueryResponse);
+
+    //增量推送客户购买商品信息 G_PageCusBuyProductInfoResponse
+    rpc PushCustromerBuyProductInfo(G_PushRequest) returns(G_PushResponse);
+
+    // 根据请求传入的客户id查询出这些客户的应收，应付金额
+    rpc GetCustomerArApList(G_CustomerArApListRequest) returns(G_CustomerArApListResponse);
+
+    // 增量推送客户状态
+    rpc PushCustomerState(G_PushRequest) returns(G_PushResponse);
+}
+
+ //拉取ERP客户
+message G_CustomerPullTaskRequest
+{
+   int32 PageSize=1;
+   string CallBackUrl=2; //回调地址
+   string Param=3; //自定义字段
+   int32 CustomerType=5; //客户类型 1:客户，2：供应商，3:两者皆是（默认1）
+   int32 IsStop=6; // 要拉取客户状态 1:正常 2: 停用 3:全部（默认1）
+}
+
+//同步客户信息请求
+message G_CustomerSynchroRequest
+{
+    repeated G_CustomerInfoResponse List=1;
+}
+
+//根据客户ID集合获取客户列表信息返回类型
+message G_PageCustomerQueryResponse
+{
+    int64 CorpId=1;
+    repeated G_CustomerInfoResponse Data=2;
+}
+
+//客户匹配响应
+message G_CustomerMatchingListResponse
+{
+    repeated G_CustomerMatchingResponse Data=1;
+}
+message G_CustomerMatchingResponse
+{
+    string CustomerCode=1;// 客户编号
+    string CustomerName=2;// 客户名称
+    string CustomerErpKey=3;// ERP中的编码
+    string CategoryKey=4;// 客户分类ID
+}
+
+//客户匹配 请求
+message G_CustomerMatchingListRequest
+{
+    repeated G_CustomerMatchingRequest List=1;
+}
+message G_CustomerMatchingRequest
+{
+    string CustomerKey=1;// 客户ID
+    string CustomerName=2;// 客户名称
+}
+
+//拉取ERP客户
+message G_PageCustomerPullTaskResponse{
+    int32 TotalCount=1;
+    bool IsFinish=2;  //是否拉取完成
+    int64 CorpId=3;
+    repeated G_CustomerInfoResponse Data=4;//客户信息
+    string Param=5; //自定义字段
+    int32 PageIndex=6; //页码
+}
+
+//同步客户响应
+message G_CustomerSynchroListResponse
+{
+    repeated G_CustomerSynchroResponse Data=1;
+}
+message G_CustomerSynchroResponse
+{
+    string CustomerName=1 ;// 客户名称
+    string CustomerKey=2 ; // 客户唯一编码
+    string CustomerErpKey=3 ;// 客户ERP Key
+    string Msg=4; //同步消息
+}
+
+//客户分类响应
+message G_PageCustomerClassifyResponse
+{
+    int32 TotalCount=1;
+    repeated G_CustomerClassifyInfoResponse Data=2;
+}
+message G_CustomerClassifyInfoResponse
+{
+    string ClassifyKey=1;// 客户分类ID
+    string ParentKey=2; // 上级ID
+    string ClassifyName=3;// 客户分类名称
+}
+
+//客户信息
+message G_CustomerInfoResponse
+{
+    string CustomerName=1 ;// 客户名称
+    string CustomerKey=2 ;// 客户唯一编码
+    string CustomerCode=3 ;// 客户编码
+    string Address=4 ;// 客户地址
+    string Tel=5;
+    string CategoryKey=6 ;// 客户分类ID
+    string CategoryName=7;//客户分类名称
+    float  CreditLimit=8 ;// 客户的信用额度
+    string BusinessManagersName=9 ;// 业务经理名称
+    repeated G_LinkInfoResponse LinkInfos=10; //联系人
+    string CustomerId=11;  //监听使用
+    string BranchKey =12;  //分支机构编码
+    string EmployeeName=13;//经手人（管家婆云使用）
+    string Bank=14;//开户银行（管家婆云使用）
+    string BankAccount=15;//银行账号（管家婆云使用）
+    float Tax=16;//税率（管家婆云使用）
+    int32 PaymentDays=17;//账期天数（管家婆云使用）
+    string Remark=18;//备注（管家婆云使用）
+    G_DeliveryinfoResponse Deliveryinfo=19;//收货地址（管家婆云使用），省市区（分销V1、V3、A8使用）
+    int32 IsDisable=20;//是否停用
+    string CustomerPY=21;//客户名字转拼音
+    int32 CustomerType=22;
+    int32 CustomerState=23;
+    string AreaName=24; //销售区域（分销V1、V3、A8、S3使用）
+    string SalePriceName=25; //适用售价（分销V1、V3、A8、S3使用）
+    string BusinessManagersId=26 ;// 业务经理ID
+    string CustomizedExtData=27;// 六婆拓展字段json字符串
+    string CustomerFullName=28;// 客户全称
+}
+message G_LinkInfoResponse
+{
+    string CustomerKey=1;
+    string LinkKey=2;
+    string LinkName=3 ;// 联系人
+    string LinkMobile=4; //联系电话
+    int32 Index=5;
+    string LinkEmail=6;//联系人邮箱（管家婆云使用）
+}
+//收货地址（管家婆云使用）
+message G_DeliveryinfoResponse
+{
+    string Receiverpeople=1;//收货人
+    string Receivertelephone=2;//手机号码
+    string Receivercellphone=3;//电话号码
+    string Receiverzipcode=4;//邮政编码
+    string Province=5;//省
+    string City=6;//市
+    string District=7;//区
+    bool Isneedinvoice=8;//是否开票
+    string Receipttitle=9;//发票抬头
+    string Receiveraddress=10;//收货地址
+}
+
+//推送联系人
+message G_PagelinkInfoResponse
+{
+   int32 TotalCount=1;
+   repeated G_LinkInfoResponse Data=2;
+   int64 CorpId=3;
+}
+
+//客户交易统计
+message G_PageCustomerSaleReportResponse
+{
+   int32 TotalCount=1;
+   repeated G_CustomerSaleReportResponse Data=2;
+   int64 CorpId=3;
+}
+message G_CustomerSaleReportResponse
+{     
+    string CustomerKey =1;// 客户Key
+    double YTotal =2;// 当年交易金额
+    double MTotal=3;// 本月交易金额
+    double PMTotal=4;// 上月交易金额
+    double LastTotal=5;// 最后一次交易金额
+    string LastTime=6;// 最后一次交易时间
+    double ReceivableTotal=7;// 客户应收款
+}
+
+//更新客户Key
+message G_PageCustomerUpdateKeyInfoResponse
+{
+    int64 CorpId=1;
+    int32 TotalCount=2;
+    repeated  G_CustomerUpdateKeyInfoResponse Data=3;
+}
+message G_CustomerUpdateKeyInfoResponse
+{
+    string OldKey=1;// 客户原始Key
+    string NewKey=2;// 客户新Key
+    string CustomerName=3;// 客户名称
+    string IdKey=4;
+    string Id=5;
+}
+
+//客户查询的id集合
+message G_CustomerQueryRequest {
+    repeated string Data=1;
+}
+
+//客户购买商品信息
+message G_PageCusBuyProductInfoResponse
+{
+    int32 TotalCount=1;
+    repeated G_PageCusBuyProductInfoDataResponse Data=2;
+    int64 CorpId=3;
+}
+message G_PageCusBuyProductInfoDataResponse
+{     
+    int32  CustomerId=1; // 客户ID
+    string CustomerKey=2; // 客户Key
+    string CustomerName=3; // 客户名称
+    int32  ProductId=4; // 商品ID
+    string ProductKey=5; // 商品Key
+    string ProductCode=6;// 商品编码
+    string LastDate=7; // 最后一次购买日期
+    double LastQty=8; // 最后一次数量
+    string LastUnitName=9; // 最后一次购买单位
+    repeated G_CusBuyProductSkuQty BuySkuQty=10;//最后一次购买含有的sku和数量
+}
+message G_CusBuyProductSkuQty{
+    repeated G_ProductSkuAttribute Attributes=1;
+    double Qty=2;
+}
+
+// 客户手动拉取请求
+message G_CustomerPullRequest{
+    int32 PageIndex=1;// 当前页码
+    int32 PageSize=2; // 每页条数
+    string Data=3; //关键字查询
+    string BranchKey=4; //机构Key
+    int32 CustomerType=5; //客户类型 1:客户，2：供应商，3:全部（默认3）
+    int32 IsStop=6; // 要拉取客户状态 1:正常 2: 停用 3:全部
+}
+
+//客户应收应付金额 请求
+message G_CustomerArApListRequest
+{
+    repeated string CustomerKey=1;
+}
+
+// 客户当前应收应付金额响应
+message G_CustomerArApListResponse
+{
+    repeated G_CustomerArApResponse Data=1;  
+}
+message G_CustomerArApResponse
+{
+    string CustomerId=1;  //客户ID
+    string CustomerKey=2;// 客户typeid
+    string CustomerName=3;// 客户名称
+    int32 CustomerType=4;// 客户类型(1:客户，2：供应商，3:两者皆是)
+    double DueFrom=5;// 客户应收
+    double PreStore=6;// 客户预收
+    double DueTo=7;// 客户应付
+    double PrePay=8;// 客户预付
+}
+// 客户状态返回信息
+message G_CustomerStateResponse
+{
+    int64 CorpId=1;
+    repeated G_CustomerState Data=2;
+}
+
+// 客户状态信息
+message G_CustomerState
+{
+    string CustomerId=1; // 客户ID
+    string CustomerKey=2; //客户Key
+    string State=3;// 客户状态（1：正常：2：停用 3：删除）
+}

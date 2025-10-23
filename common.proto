@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc";
+
+//通用请求
+message G_BaseInfoRequest{
+    int32 PageIndex=1;// 当前页码
+    int32 PageSize=2; // 每页条数
+    string Data=3; //关键字查询
+    string BranchKey=4; //机构Key
+}
+
+//推送统一请求
+message G_PushListRequest
+{
+    repeated G_PushRequest Data=1;
+}
+message G_PushRequest
+{
+    int32 Count=1; //推送条数
+    string PushAddress=2;//推送地址，推送内容参考注释上面的对象
+    int32 SynchroId=3; //推送ID，同时推送多个消息需要判断响应的推送地址和消息  
+}
+
+//推送统一响应
+message G_PushResponse
+{
+    int32 State=1; //状态 1成功 2失败
+    string Msg=2; //消息
+}
+
+//---------------------------------------------------------------------------------------------------
+//单据类型（好像Grpc的下标不能小于零，只能从0开始）
+enum G_BillType {
+    BillTypeNone = 0;// 无类型
+    SalesOutstorage = 1;// 销售出库
+    SalesReturn = 2;// 销售退货
+    Gather = 3; // 收款
+    Payment = 4; // 付款
+    SalesOrder = 5; // 销售订单
+    RetailOrder = 6;// 零售销售
+    RetailReturn = 7;// 零售退货
+    PreGather = 8;// 预收款
+}
+
+enum G_SyncStateType { 
+    Unsync=0;// 未同步
+    SyncSuccess=1;// 同步成功
+    SyncFail=2;// 同步失败
+    PullSuccess=3;// 拉取成功
+    DeleteSuccess=4;// 删除成功
+    DraftSuccess=5;// 转草稿成功
+    DraftFail=6;// 转草稿失败
+    SignSuccess=7;// 审核成功
+    SignFail=8;// 审核失败
+}
+
+//---------------------------------------------------------
+
+//更新Key
+message G_PageUpdateKeyInfoResponse
+{
+    int64 CorpId=1;
+    int32 TotalCount=2;
+    repeated  G_UpdateKeyInfoResponse Data=3;
+}
+message G_UpdateKeyInfoResponse
+{
+    string OldKey=1;// 原始Key
+    string NewKey=2;// 新Key
+    string IdKey=3;
+    string Id=4;
+}
+
+//库存类型
+enum G_StockJoinMethod{
+    Reality=0; //实际库存（账面库存）
+    Virtual=1;//虚拟库存
+}
+
+
+//影响往来对账单据类型
+enum G_CurrentAccountType {
+    XSD=0;// 销售单
+    XSTH=1;//销售退货
+    XSHHD=2;//销售换货单
+    XSDD=3;//销售订单
+    JHD=4;//进货单
+    JHTHD=5;//进货退货单
+    JHHHD=6;//进货换货单
+    JHDD=7;//进货订单
+    QTCKD=8;//其它出库单
+    QTRKD=9;//其它入库单
+    YBFY=10;//一般费用
+    QTSR=11;//其它收入
+    SKD=12;//收款单
+    FKD=13;//付款单
+    GZGZ=14;//购置固资
+    BMGZ=15;//变卖固资
+    YSJS=16;//应收减少
+    YSZJ=17;//应收增加
+    YFZJ=18;//应付增加
+    YFJS=19;//应付减少
+    KJPZ=20;//会计凭证
+    JJ=21;//借进
+    JJHC=22;//借进还出
+    JZJH=23;//借转进货
+    JC=24;//借出
+    JCHH=25;//借出还回
+    JZXS=26;//借转销售
+    WTFHD=27;//委托发货单
+    WTJSD=28;//委托结算单
+    STSHD=29;//受托收货单
+    STJSD=30;//受托结算单
+    WTTHD=31;//委托退货单
+    STTHD=32;//受托退货单
+    WTDJD=33;//委托调价单
+    STTJD=34;//受托调价单
+    ZHTJXSDD=35;//组合套件销售订单
+    ZHTJXSD=36;//组合套件销售单
+    ZHTJXSTHD=37;//组合套件销售退货单
+    HLZXD=38;//获利执行单
+    FLZXD=39;//返利执行单
+    LYZK=40;//联营账款
+    WWJGLLD=41;//委外加工领料单
+    WWJGTLD=42;//委外加工退料单
+    WWJGWGD=43;//委外加工完工单
+    WWJGTHD=44;//委外完工退货单
+    WWJGFYD=45;//委外加工费用单
+    KHJBD=46;//客户价保单
+    GYSJBD=47;//供应商价保单
+    GJRKD=48;//估价入库单
+    YFFYD=49;//应付费用单
+    WLHXD=50;//往来核销单
+
+}
+
+//商品sku属性
+message G_ProductSkuAttribute{
+    string Type=1;
+    string Key=2;
+}
+
+//属性规格
+message G_ProductAttribute{
+    string Type=1;
+    string Key=2;
+    string Name=3;
+}

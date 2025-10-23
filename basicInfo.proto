@@ -1,0 +1,206 @@
+syntax = "proto3";
+import "common.proto";
+
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc.BasicInfo";
+
+//基础信息
+service BasicInfo {
+    //获取分支机构
+    rpc PageBranchDataList(G_BaseInfoRequest) returns(G_PageBranchInfoResponse);
+
+    //获取职员信息
+    rpc PageEmployeeDataList(G_BaseInfoRequest) returns(G_PageEmployeeInfoResponse);
+
+    //获取仓库信息
+    rpc PageStockDataList(G_BaseInfoRequest) returns(G_PageStockInfoResponse);
+
+    //获取科目
+    rpc PageSubjectDataList(G_BaseInfoRequest) returns(G_PageSubjectInfoResponse);
+
+    //获取价格
+    rpc PagePriceDataList(G_BaseInfoRequest) returns(G_PagePriceInfoResponse); 
+
+    //获取部门
+    rpc PageDepartmentList(G_BaseInfoRequest) returns(G_PageDepartmentResponse);
+
+    //删除监听表、重新上报数据
+    rpc ResetPush(G_ResetPushRequest) returns(G_PushResponse);
+
+
+    //增量推送职员 G_PageEmployeeInfoResponse
+    rpc PushEmployee(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送仓库 G_PageStockInfoResponse
+    rpc PushWarehouse(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送客户或商品Key变更  G_PageUpdateKeyInfoResponse
+    rpc PushErpDiffTypeIDKey(G_PushRequest) returns(G_PushResponse);
+
+    //进销存自动同步状况信息
+    rpc GetErpAutoSyncInfo(G_ErpAutoSyncInfoRequest) returns(G_ErpAutoSyncInfoResponse);
+
+    //获取门店信息
+    rpc PageMenInfoDataList(G_BaseInfoRequest) returns (G_PageMenInfoResponse);
+
+    //零售获取取收款账户
+    rpc GetAccountItemList(G_BaseInfoRequest) returns (G_AccountItemReponse);
+
+    //获取制单人信息
+    rpc PageTabulateInfoList(G_BaseInfoRequest) returns (G_PageTabulateInfoResponse);
+
+    //增量推送多属性规格资料
+    rpc PushMultiAttribute(G_PushRequest) returns(G_PushResponse);
+}
+
+//删除监听表、重新上报数据
+message G_ResetPushRequest
+{
+    repeated string Keys=1; //各种监听表主键
+    int32 PushType=2;   //推送类型
+}
+
+//价格响应结果
+message G_PagePriceInfoResponse
+{   
+    int32 TotalCount=1;
+    repeated G_PriceInfoResponse Data=2; 
+}
+message G_PriceInfoResponse
+{   
+    string PriceKey=1;// 价格ID  
+    string PriceName=2;// 价格名称
+}
+
+//部门响应结果
+message G_PageDepartmentResponse
+{   
+    int32 TotalCount=1;
+    repeated G_DepartmentResponse Data=2; 
+}
+message G_DepartmentResponse
+{   
+    string DeptKey=1;// 部门key 
+    string DeptName=2;// 部门名称
+}
+
+//科目响应结果
+message G_PageSubjectInfoResponse
+{ 
+    int32 TotalCount=1;
+    repeated G_SubjectInfoResponse Data=2;// 分支机构集合
+}
+message G_SubjectInfoResponse
+{   
+    string AccountKey=1;// 收款账户主键ID   
+    string ParentKey=2;// 父ID
+    string AccountName=3;// 收款账户名称
+}
+
+//仓库信息响应结果
+message G_PageStockInfoResponse
+{   
+    int32 TotalCount=1;
+    repeated G_StockInfoResponse Data=2;// 分支机构集合
+    int64 CorpId=3; //终端客户ID
+}
+message G_StockInfoResponse
+{   
+    string WarehouseKey =1;// 仓库Key
+    string ParentKey =2;// 父Key
+    string WarehouseName=3;// 仓库名称
+    string BranchKey=4;// 分支机构Key
+    string WarehouseId=5; //仓库ID
+    string WarehouseCode=6;//仓库CODE
+    string WarehouseAddress=7;//仓库地址
+}
+
+//职员信息响应结果集
+message G_PageEmployeeInfoResponse
+{    
+    int32 TotalCount=1;
+    repeated G_EmployeeInfoResponse Data=2; // 分支机构集合
+    int64 CorpId=3;  //终端客户ID
+}
+message G_EmployeeInfoResponse{
+    string EmployeeKey =1;// 职员主键ID
+    string ParentKey=2;// 职员父级Key
+    string EmployeeName=3;// 职员名称
+    int32 Sex=4;//性别1:男 2:女
+    string Tel=5;//电话
+    string Birthday=6;//生日
+    int32 Age=7;
+    string EMail=8;
+    string EmployeeCode=9;
+}
+
+//分支机构响应结果集
+message G_PageBranchInfoResponse
+{    
+    int32 TotalCount=1;
+    repeated G_BranchInfoResponse Data=2;// 分支机构集合
+}
+message G_BranchInfoResponse{
+    string BranchKey =1;// 分支机构(门店)主键ID
+    string ParentKey=2;// 分支机构父级Id
+    string BranchName=3;//分支机构名称
+}
+
+//制单人相应结果集
+message G_PageTabulateInfoResponse
+{    
+    int32 TotalCount=1;
+    repeated G_TabulateInfoResponse Data=2;// 分支机构集合
+}
+
+//制单人相应结果
+message G_TabulateInfoResponse{
+    string TabulateKey =1;// 制单人ID
+    string TabulateName=2;// 制单人名称
+}
+
+// 进销存自动同步状况信息
+message G_ErpAutoSyncInfo {
+    string Type=1;//数据类型
+    int32 WaitQty=2;//待同步数量
+    int32 SuccessQty=3;//已成功同步的数量
+    int32 FailQty=4;//同步失败的数量
+    int32 SumCount=5;//总条
+}
+message G_ErpAutoSyncInfoResponse {
+    repeated G_ErpAutoSyncInfo Data=1;
+}
+message G_ErpAutoSyncInfoRequest{
+    int64 CorpId=1;
+    G_StockJoinMethod Method=2;//库存类型 0:正常 1:虚拟
+}
+
+//门店列表
+message G_PageMenInfoResponse {
+    repeated G_PageMenInfo Data=1;//门店列表
+}
+
+//门店信息
+message G_PageMenInfo {
+    string MenKey=1;//门店Key
+    string MenName=2;//门店名称
+}
+
+//零售获取收款账户
+message G_AccountItem {
+    string AccountKey=1;//科目Key
+    string AccountName=2;//科目名称
+}
+
+message G_AccountItemReponse {
+    int32 TotalCount=1;
+    repeated G_AccountItem Data=2;// 分支机构集合
+}
+
+//多属性规格响应结果
+message G_PageMultiAttributeResponse
+{
+    int32 TotalCount=1;
+    repeated G_ProductAttribute Data=2;// 多属性规格集合
+    int64 CorpId=3; //终端客户ID
+}

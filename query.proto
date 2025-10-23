@@ -1,0 +1,258 @@
+syntax = "proto3";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+import "common.proto";
+
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc.Query";
+
+//查询
+service Query {
+
+    //会员获取零售单
+    rpc GetVipSaleOrder (google.protobuf.StringValue) returns (G_VipSaleOrderResponse);
+
+    //获取 每日销售额和交易次数
+    rpc PageGetDayTradeData(G_ErpDayTradePullRequest) returns (G_ErpDayTradePullResponse);
+
+    //往来对账明细查询
+    rpc PageCurrentAccountDetailList(G_CurrentAccountDetailRequest) returns(G_CurrentAccountDetailListResponse);
+
+    //往来单据明细
+    rpc ErpBillInfoList(G_ErpBillInfoRequest) returns(G_ErpBillInfoResponse);
+
+    //查询过账上报单据
+    rpc QuerySyncbillMonitor(google.protobuf.StringValue) returns(G_SyncbillMonitor);
+
+    //推送客户应收应付预收预付 数据
+    rpc ArApByStartAndEndPullTask(G_ArApByStartAndEndRequest) returns(G_PushResponse);
+
+    //推送所有影响往来的经营历程 数据
+    rpc BusinessHistoryPullTask(G_BusinessHistoryRequest) returns(G_PushResponse);
+
+    //查询客户返利余额
+    rpc QueryAccountBalance(G_QueryAccountBalanceRequest) returns (G_QueryAccountBalanceResponse);
+
+    //查询客户返利余额明细数据
+    rpc QueryAccountBalanceDetail(G_QueryCutomerAccountBalanceDetailRequest) returns (G_QueryCutomerAccountBalanceDetailListResponse);
+
+    //查询客户价格跟踪报表
+    rpc QueryPriceTrackReport(G_BusinessHistoryRequest) returns (G_PushResponse);
+}
+
+//查询时间段内每天每个客户的销售总额和交易次数
+message G_ErpDayTradePullRequest {
+    string StartTime=1;//查询范围开始时间
+    string EndTime=2;//查询范围结束时间
+    int32 PageIndex=3;//页码
+    int32 PageSize=4;//每页显示
+}
+
+//erp交易数据，精确到日
+message G_ErpDayTradePull {
+    string CustomerKey=1;//客户唯一标志
+    string TradeDate=2;//交易日期
+    int32 Count=3;//每天销售单单据，只统计过账的单据（排除红冲单据）
+    double Total=4;//每天销售总额（排除红冲单据）
+}
+
+//erp交易数据 返回数据
+message G_ErpDayTradePullResponse {
+    bool HasMoreData=1;//是否还有数据，还有数据则会发起下一次请求
+    string ErrorMsg=2;//错误消息
+    repeated G_ErpDayTradePull Data=3;//交易数据列表，精确到日
+}
+
+//往来对账明细查询条件
+message G_CurrentAccountDetailRequest
+{
+    string StartTime=1;// 查询范围开始时间
+    string EndTime=2;// 查询范围结束时间
+    string CustomerKey=3;// 客户Key:不能为空，有一些ERP可能是ID
+    string Symbol=4;// 标识，是1 用户在查，2 客户在查
+    int32 IsRefresh=5;// 是否刷新，刷新的话，就是重新查询
+    string OrderBy=6;// 排序（应收应付顺序还是倒序）asc/desc
+    int32 StartIndex=7;//分页起始位置
+    int32 EndIndex=8;//分页结束位置
+}
+
+//往来对账明细查询
+message G_CurrentAccountDetailListResponse
+{
+    double IniTotal=1;//期初金额
+    double EndTotal=2;//期末
+    int32 TotalCount=3;//总行数
+    repeated G_CurrentAccountDetailResponse Data=4;
+}
+message G_CurrentAccountDetailResponse
+{
+    string BillID=1;//单据ID
+    string BillCode=2;//单据编号 
+    string BillDate=3;//单据日期
+    int32 BillType=4;//单据类型
+    string BTypeID=5;//客户Key
+    double BillTotal=6;//单据金额
+    double ArTotal=7;//应收
+    double ApTotal=8;//应付
+    double PreArTotal=9;//预收
+    double PreApTotal=10;//预付
+    double Total=11;//余额
+    string ETypeID=12;//经手人Key
+    string Comment=13;//备注
+    string BillName=14;//单据名称
+    string CustomerName=15;//客户名称
+    string EmpName=16;//经手人
+}
+
+//会员获取零售明细
+message G_VipSaleOrderResponse
+{
+    int64 CorpId=1;//CorpId
+    G_VipSaleOrderInfo OrderBill=2;
+    repeated G_VipSaleOrderDetailInfo OrderDetail=3;
+}
+message G_VipSaleOrderInfo
+{
+    string RealName=1 ;// 持卡人名称
+    string CardCode=2 ;// 会员卡号
+    string OrderId=3 ;// 单据主键ID
+    string OrderDate=4 ;// 录单日期
+    string OrderCode=5 ;// 单号
+    string BranchName=6 ;// 分支机构
+    string CustomerName=7 ;// 往来单位
+    string EmployeeName=8 ;// 经手人
+    string DepartmentName=9 ;// 部门
+    string StockName=10 ;// 发货仓库
+    string CurrencyName=11 ;// 币种名称
+    string AgentName=12 ;// 结算单位
+    string Remark=13 ;// 备注
+    float TotalMoney=14 ;// 应付金额
+    float DiscountAmount=15 ;// 优惠金额
+    string AccountName=16 ;// 账户类型
+}
+message G_VipSaleOrderDetailInfo
+{
+    string OrderId=1 ;// 单据主键ID
+    string ProductCode=2 ;// 商品编号
+    string ProductName=3 ;// 商品名称
+    string StockName=4 ;// 仓库名称
+    float Qty=5 ;// 数量
+    string UnitName=6 ;// 单位名称
+    float SalePrice =7;// 单价
+    float SaleTotal=8 ;// 金额
+    float Discount=9 ;// 折扣
+    float TaxPrice=10 ;// 折扣税后价
+    float TaxTotal=11 ;// 折扣税后金额
+    int32 IsGift=12 ;// 是否赠品 1为赠品   0不是赠品
+    string Remark=13 ;// 备注
+}
+
+//往来单据明细请求
+message G_ErpBillInfoRequest
+{
+    string BillKey =1;// 单据Key
+    int32 BillType=2;// 单据类型
+}
+
+// 全按以前的字段名来，暂时不想去调整以前的逻辑
+message G_ErpBillInfoResponse
+{
+    string BillID=1 ;// 单据ID
+    string BillCode=2 ;// 单号
+    string BillDate=3 ;// 单据时间
+    string EmployeeName=4 ;// 职员
+    string DepartmentName=5 ;// 部门
+    string CustomerName=6 ;// 结算单位
+    string BillCustomerName=7 ;// 单据往来单位
+    string Note=8 ;// 备注，摘要
+    string AccountName=9 ;// 收款账户
+    float PayTotal=10 ;// 收款金额
+    float Preferential=11 ;// 优惠金额
+    float Total=12 ;// ？？？？这个。。。
+    float SumQty=13 ;// 总数量
+    float SumTotal=14 ;// 总金额
+    float SumDisTotal=15 ; // 总折后金额
+    float SumTaxTotal=16 ;// 总含税金额
+    repeated G_ErpBillDetail  Detail=17 ; // 单据明细
+}
+message G_ErpBillDetail
+{
+    string ProductCode=1;// 商品编号
+    string ProductName=2;// 商品名称
+    string Standard=3;// 规格
+    string WarehouseName=4 ;// 仓库名称
+    float Qty=5 ;// 数量
+    string UnitName=6 ;// 单位名称
+    float Price=7 ;// 单价
+    float Total=8 ;// 金额
+    float Discount=9 ;// 折扣
+    float DiscountPrice=10 ;// 扣后单价
+    float DiscountTotal=11 ;// 折后金额
+    float Tax=12 ;// 税率
+    float TaxPrice=13 ;// 含税单价
+    float TaxTotal=14 ;// 含税金额
+    int32 IsGift=15;//是否是赠品
+}
+
+message G_SyncbillMonitor {
+    string CrmDataKey=1;//订货的单据ID
+    string ErpBillKey=2;//ERP Key
+    string PostDateTime=3;//上报时间
+    int32 BillType=4;
+}
+
+
+// 查询单位应收应付预收预付数据参数
+message G_ArApByStartAndEndRequest {
+    int32 IsEnd=1;// 是否单位期末应收应付数据
+    int64 CorpId=2;
+    int32 PageSize=3;  //每次推送条数
+    string CallBackUrl=4; //推送地址
+}
+
+// 查询单位经营历程参数
+message G_BusinessHistoryRequest {
+    int64 CorpId=1;
+    int32 PageSize=2;  //每次推送条数
+    string CallBackUrl=3; //推送地址
+}
+// 客户返利余额查询参数
+message G_QueryAccountBalanceRequest{
+    repeated string CutomerKey=1; //客户Key
+}
+// 客户返利余额返回
+message G_QueryAccountBalanceResponse{
+    int64 CorpId=1;// 企业id
+    repeated G_QueryAccountBalance Data=2;
+}
+message G_QueryAccountBalance{
+    string CustomerKey=1; //客户Key
+    double BalanceAmount=2; //返利余额
+}
+// 客户返利余额明细查询请求参数
+message G_QueryCutomerAccountBalanceDetailRequest{
+    string CustomerKey=1;//客户Key
+    string StartTime=2;//开始时间
+    string EndTime=3;//结束时间
+    int32 PageIndex=4;//页码
+    int32 PageSize=5;//每页数量
+}
+// 客户返利余额明细返回数据
+message G_QueryCutomerAccountBalanceDetailListResponse{
+    int64 CorpId=1;//企业id
+    repeated G_QueryCutomerAccountBalanceDetailResponse Data=2;
+    int32 TotalCount=3;//总行数
+}
+
+message G_QueryCutomerAccountBalanceDetailResponse{
+    string CustomerKey=1;//客户Key
+    string CustomerName=2;//客户姓名
+    string CustomerCode=3;//客户编码
+    string Date=4;//日期
+    string BillName=5;//单据名称
+    string BillCode=6;//单据编号
+    string Remark=7;//备注
+    double Amount=8;//返利结算金额
+    double AmountBalance=9;//返利余额数据
+    //double CurrentAmountBalance=10;//当前返利余额数据
+}

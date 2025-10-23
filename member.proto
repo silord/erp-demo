@@ -1,0 +1,358 @@
+syntax = "proto3";
+import "common.proto";
+
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc.Member";
+
+//会员管理
+service Member {
+    //获取会员分类
+    rpc PageMemberClassifyList (G_BaseInfoRequest) returns (G_MemberClassifyListResponse);
+
+    //拉取ERP会员 G_MemberPullTaskResponse
+    rpc MemberPullTask(G_MemberPullTaskRequest) returns(G_PushResponse);
+
+    //会员同步到ERP
+    rpc MemberSynchroList(G_MemberListSynchroRequest) returns(G_MemberListSynchroResponse);
+
+    //会员交易统计
+    rpc PageMemberTradeStatisticsList(G_BaseInfoRequest) returns(G_PageMemberTradeStatisticsResponse);
+
+    //会员储值信息
+    rpc PageMemberStoredList(G_PageMemberRecordRequest) returns(G_PageMemberRecordResponse);
+
+    //会员积分记录
+    rpc PageMemberIntegralList(G_PageMemberRecordRequest) returns(G_PageMemberRecordResponse);
+
+    //会员交易信息
+    rpc PageMemberTradeList(G_PageMemberRecordRequest) returns(G_PageMemberRecordResponse);
+
+    //会员积分余额
+    rpc PageMemberIntegralBalanceList(G_BaseInfoRequest) returns(G_PageMemberIntegralBalanceListResponse);
+
+    //同步会员积分
+    rpc SynchroMemberIntegralList(G_SynchroMemberIntegralListRequest) returns(G_SynchroMemberIntegralListResponse);
+
+    //更新会员的匹配状态
+    rpc UpdateMemberMatchingState(G_UpdateMemberMatchingStateRequest) returns(G_PushResponse);
+
+    //更新会员基础信息
+    rpc UpdateMemberInfo(G_MemberBaseInfoUpdateRequest) returns (G_MemberBaseInfoUpdateListResponse);
+
+    //更新零售对应ERP优惠券状态
+    rpc UpdateRetailCouponState(G_RetailCouponStateUpdateRequest) returns (G_RetailCouponStateUpdateListResponse);
+
+    //同步优惠券
+    rpc SynchroCouponList(G_SynchroCouponListRequest) returns (G_SynchroCouponListResponse);
+
+    //推送积分余额发生变化的会员 G_PageMemberIntegralBalanceListResponse
+    rpc PushChangeMember(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送优惠卷使用状态 G_PageCouponUseStateResponse
+    rpc PushCouponUseState(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送会员交易数据 G_PageMemberTradeStatisticsResponse
+    rpc PushMemberTradeReport(G_PushRequest) returns(G_PushResponse);
+}
+
+//优惠券响应
+message G_SynchroCouponListResponse
+{
+   repeated G_SynchroCouponResponse Data=1;
+}
+message G_SynchroCouponResponse
+{
+    string CouponCode=1;// 优惠券id 
+    string CouponErpKey=2 ;// erp优惠券类型同步key
+    string RecordCode=3;// 优惠劵领卷CODE
+    string RecordErpKey=4;// 优惠劵使用key 
+    int32 State=5;// 同步ERP状态 0 未同步 1同步成功 2同步失败
+    string Msg=6;// 同步ERP操作消息 
+}
+
+//优惠券请求
+message G_SynchroCouponListRequest
+{
+   repeated G_SynchroCouponRequest Data=1;
+}
+message G_SynchroCouponRequest
+{    
+    string CouponCode=1;// 优惠券编码 
+    string MemberKey=2;// 会员Key 
+    string RecordCode =3;// 优惠劵领卷CODE
+    string Name=4;// 优惠券名称 
+    float Money =5;// 面值
+    float MinOrderMoney =6;// 金额满多少可以使用（门槛值）
+    string StartTime =7;// 开始时间
+    string EndTime =8;// 结束时间
+    string Remark =9;// 备注
+}
+
+ //拉取ERP会员
+message G_MemberPullTaskRequest
+{
+   int32 PageSize=1;
+   string CallBackUrl=2; //回调地址
+   string Param=3; //自定义字段
+}
+
+message G_UpdateMemberMatchingStateRequest
+{
+    repeated string MemberKeys=1;//会员Key
+    int32 State=2;//状态  0=处理中 1=失败 2=成功 3=无效
+}
+
+//同步会员积分响应
+message G_SynchroMemberIntegralListResponse
+{
+   repeated G_SynchroMemberIntegralResponse Data=1;
+}
+message G_SynchroMemberIntegralResponse
+{
+    int64 DetailId=1;// 监视操作详情记录id
+    int64 NotifyId=2;// 监视详细通知记录id
+    int32 State =3;// 操作返回结果：1=成功，2=失败
+    string Msg=4; //消息
+}
+
+//同步会员积分
+message G_SynchroMemberIntegralListRequest
+{
+    repeated G_SynchroMemberIntegralRequest Data=1;
+}
+message G_SynchroMemberIntegralRequest
+{
+    int64 DetailId =1;// 监视操作详情记录id
+    int64 NotifyId =2;// 监视详细通知记录id
+    int32 Type=3;// 监视类型：1-零售会员余额,2-零售会员积分
+    int32 GoTo=4;// 监视对象标识Key对应处理受理方：1-监视对象1受理方，2-监视对象2受理方
+    string MemberKey=5; // 监视对象标识Key，如零售会员id、erp会员标识等
+    float AmountChange=6;// 改变量，为正：累加，为负：累减，例如：3
+    float NextBenchmark=7; //  下次同步基准值，即同步完成后基准值
+}
+
+//会员积分储值余额
+message G_PageMemberIntegralBalanceListResponse
+{
+    int32 TotalCount=1;
+    repeated G_MemberIntegralBalanceResponse Data=2;
+    int64 CorpId=3;
+}
+message G_MemberIntegralBalanceResponse
+{
+    string MemberKey=1;// 会员卡主键ID
+    float Assets=2;// 当前会员储值余额
+    float Points=3;// 当前会员积分余额
+    string MemberName=4; //会员名称
+}
+
+//会员储值，积分，交易响应
+message G_PageMemberRecordResponse
+{
+   int32 TotalCount=1;
+   repeated G_MemberStoredResponse Data=2;
+}
+message G_MemberStoredResponse
+{ 
+    string OrderCode=1;// 订单编号
+    float Amount=2;// 消费金额 /积分数量
+    string Caption=4;// 单据类型说明
+    string CreateTime=5;// 创建时间
+}
+
+//会员储值，积分，交易请求
+message G_PageMemberRecordRequest
+{
+    int32 PageSize=1;
+    int32 PageIndex=2;
+    string BeginDate=3;// 查询开始时间
+    string EndDate=4;// 查询结束时间
+    string Data=5;// 查询关键字 会员Key
+    int32 Type=6; // 默认为0，查询所有零售单，跟之前的结果一样，为1查询erp的零售单，排除零售同步到erp中的零售单
+}
+
+//会员交易统计
+message G_PageMemberTradeStatisticsResponse
+{
+    int32 TotalCount=1;
+    repeated G_MemberTradeStatisticsResponse Data=2;   
+    int64 CorpId=3;
+}
+message G_MemberTradeStatisticsResponse
+{
+    string MemberKey=1;// 会员主键ID
+    float YearTotal=2;// 本年交易额
+    float MonthTotal=3;// 本月交易额
+    float PreMonthTotal=4;// 上月交易额
+    float LastTotal =5;// 上次交易额
+    string LastTime=6;// 上次交易时间
+    string TotalMoney=7;// 累计交易总额
+    int32 TotalCount=8;// 累计交易次数
+}
+
+//推送会员交易统计
+message G_PagePushMemberTradeStatisticsResponse
+{
+    int64 CorpId=1;
+    repeated G_PushMemberTradeStatisticsResponse Data=2;   
+}
+message G_PushMemberTradeStatisticsResponse
+{
+    string MemberKey=1;// 会员主键ID
+    double YearTotal=2;// 本年交易额
+    double MonthTotal=3;// 本月交易额
+    double PreMonthTotal=4;// 上月交易额
+    double LastTotal =5;// 上次交易额
+    string LastTime=6;// 上次交易时间
+    double TotalMoney=7;// 累计交易总额
+    int32 TotalCount=8;// 累计交易次数
+}
+
+//会员同步响应
+message G_MemberListSynchroResponse
+{
+   repeated G_MemberSynchroResponse Data=1;  
+}
+message G_MemberSynchroResponse
+{
+    string MemberKey=1;// 会员唯一标识
+    string MemberErpKey=2;// 同步到ERP的 唯一标识
+    string Msg=3;// 单据同步到进销存对应的消息
+}
+
+//会员同步请求
+message G_MemberListSynchroRequest
+{
+    repeated G_MemberInfo Data=1;   
+}
+
+//拉取ERP会员响应
+message G_MemberPullTaskResponse
+{
+    int32 TotalCount=1;
+    bool IsFinish=2;  //是否拉取完成
+    int64 CorpId=3;
+    repeated G_MemberInfo Data=4;//会员信息 
+    string Param=5; //自定义字段
+}
+
+message G_MemberInfo
+{
+    string MemberKey=1 ;// ERP会员唯一标识
+    string RealName=2 ; // 真实名称
+    string NickName=3 ;// 昵称
+    string Mobile=4 ;// 手机号码
+    int32 Sex=5 ;// 性别
+    float TotalPoints=6 ;// 总积分
+    float TotalAssets=7 ;// 总消费
+    float Points=8 ;// 积分
+    float Assets=9 ;// 余额
+    string Serial=10 ;// 会员卡号
+    string GrantDate=11 ;// 发卡日期
+    string ExpiryDate=12 ;// 有效期
+    string BranchKey=13;  //分支机构Key
+    string BranchName=14 ;// 分支机构名称
+    string ErpMemberClassKey=15 ;// ERP会员分类标识
+    string ErpCustomerKey=16 ;// ERP客户标识
+    string ErpCustomerName=17 ;// ERP客户名称
+    string Birthday=18 ;// 会员生日
+
+    int32 TotalReturns=19 ;// 总退货
+    float GoodsDiscount=20 ;// 商品折扣
+    float Discount=21 ;// 会员折扣
+
+    int32 TotalOrders=22; // 总订单
+    string EmployeeKey=23;// 职员Key
+    string EmployeeName=24;// 职员名称
+    string RelatedEmployeeMobile=25;//关联职员
+    string Relationetypeid=26;//关联职员Key
+}
+
+//会员分类
+message G_MemberClassifyListResponse
+{
+   int32 TotalCount=1;
+   repeated G_MemberClassifyResponse Data=2;
+}
+message G_MemberClassifyResponse
+{
+    string ClassifyKey=1;// 分类唯一Key
+    string ParentKey=2;// 上级ID
+    string ClassifyName=3;// 分类名称  
+}
+
+//推送积分发生变化的会员
+message G_PageCouponUseStateResponse
+{
+   int64 CorpId=1;
+   int32 TotalCount=2;
+   repeated G_CouponUseStateResponse Data=3;
+}
+message G_CouponUseStateResponse
+{       
+    string UseKey=1;// 优惠卷使用key
+    int32 State=2; // 状态
+}
+
+//会员基础信息
+message G_MemberBaseInfo
+{
+    string MemberKey=1 ;// ERP会员唯一标识
+    string RealName=2 ; // 真实名称
+    string NickName=3 ; // 昵称
+    string Mobile=4 ;   // 手机号码
+    int32 Sex=5 ;       // 性别
+    string Birthday=6 ; // 会员生日
+}
+
+message G_MemberBaseInfoUpdateState
+{       
+    string MemberKey=1;// ERP会员唯一标识
+    int32 State=2;     // 状态
+}
+
+message G_MemberBaseInfoUpdateRequest
+{
+    int64 CorpId=1;
+    repeated G_MemberBaseInfo Data=2;
+}
+
+message G_MemberBaseInfoUpdateResponse
+{
+    string MemberKey=1;
+    int32 State=2;
+}
+
+message G_MemberBaseInfoUpdateListResponse
+{
+    int64 CorpId=1;
+    repeated G_MemberBaseInfoUpdateResponse Data=2;
+}
+
+//零售优惠券状态
+message G_RetailCouponState
+{
+    string RetailKey=1;
+    string ErpKey=2;
+    int32 State=3;
+}
+
+//零售优惠券状态更新请求
+message G_RetailCouponStateUpdateRequest
+{
+    int64 CorpId=1;
+    repeated G_RetailCouponState Data=2;
+}
+
+//零售优惠券状态更新响应
+message G_RetailCouponStateUpdateResponse
+{
+    string RetailKey=1;
+    int32 State=2;
+}
+
+message G_RetailCouponStateUpdateListResponse
+{
+    int64 CorpId=1;
+    repeated G_RetailCouponStateUpdateResponse Data=2;
+}

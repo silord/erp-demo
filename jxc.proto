@@ -1,0 +1,515 @@
+syntax = "proto3";
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc.jxc";
+
+//进销存API
+service JxcApi {
+    //获取单据详情商品
+    rpc GetBillDetailBody(G_JXC_BillDetailParmRequest) returns (G_JXC_ResultBillDetailResponse);
+    //获取单据表头
+    rpc GetBillDetailHead(G_JXC_BillDetailParmRequest) returns (G_JXC_ResultBillHeadResponse);
+    //获取老板一张表
+    rpc GetBossData(G_JXC_BossDataParmRequest) returns(G_JXC_ResultBossDataResponse);
+    //获取商品分类
+    rpc GetProductCategory(G_JXC_TreeKey_ParmRequest) returns(G_JXC_TreeNodeOneResponse);
+    //获取单据类型
+    rpc GetBillType(G_JXC_FilterDataRequest) returns(G_JXC_ResultBillTypeResponse);
+    //获取客户分类
+    rpc GetCustormerCategory(G_JXC_TreeKey_ParmRequest) returns(G_JXC_TreeNodeOneResponse);
+    //获取仓库
+    rpc GetWarehourseData(G_JXC_FilterDataRequest) returns(G_JXC_ResultWerahourseResponse);
+    //获取部门
+    rpc GetDepartmentData(G_JXC_FilterDataRequest) returns(G_JXC_ResultDepartmentResponse);
+    //获取职员
+    rpc GetEmployeeData(G_JXC_FilterDataRequest) returns(G_JXC_ResultEmployeeResponse);
+    //获取分支机构
+    rpc GetBranchData(google.protobuf.Empty) returns(G_JXC_ResultBranchResponse);
+    //获取资金余额
+    rpc GetMoneyData(google.protobuf.Empty) returns(G_JXC_ResultMoneyDataResponse);
+    //获取应收应付
+    rpc GetTotalAPAR(google.protobuf.Empty) returns(G_JXC_ResultAPARDataResponse);
+    //获取库存
+    rpc GetTotalStock(google.protobuf.Empty) returns(G_JXC_ResultTotalStockResponse);
+    //获取经营概况中昨天，今天，近7天，近30天交易数据
+    rpc GetReusultSituationSaleData(google.protobuf.Empty) returns(G_JXC_ReusultSituationSaleDataResponse);
+    //获取商品销售报表
+    rpc GetProductSaleData(G_JXC_BaseStatistisParmRequest) returns(G_JXC_ResultProductSaleStatisticListResponse);
+    //获取价格跟踪
+    rpc GetProductPriceTranceData(G_JXC_ProductPriceTranceParmRequest) returns (G_JXC_ResultProductPriceTranceResponse);
+    //获取经营历程数据
+    rpc GetOperateHistoryData(G_JXC_OperatorHistoryParmRequest) returns (G_JXC_OperatorHistoryDataListResponse);
+    //获取单个商品销售情况流水
+    rpc GetOneProductSaleFlow(G_JXC_BaseStatistisParmRequest) returns (G_JXC_ResultOneProductSaleFlowResponse);
+    //获取客户销售统计
+    rpc GetCustomerSaleData(G_JXC_BaseStatistisParmRequest) returns(G_JXC_ResultCustomerSaleStatisticResponse);
+    //获取单个客户销售情况流水
+    rpc GetOneCustomerSaleFlow(G_JXC_BaseStatistisParmRequest) returns(G_JXC_ResultOneCustomerSaleFlowResponse);
+    //获取职员销售统计
+    rpc GetEmployeeSaleData(G_JXC_BaseStatistisParmRequest) returns(G_JXC_ResultEmployeeSaleStatisticResponse);
+    //获取职员销售统计流水
+    rpc GetOneEmployeeSaleFlow(G_JXC_BaseStatistisParmRequest) returns (G_JXC_ResultOneEmployeeSaleFlowResponse);
+    //获取往来单位应收应付
+    rpc GetAgentAPARData(G_JXC_APARDetailParmRequest) returns (G_JXC_ResultAgentAPARDataResponse);
+    //获取单位应收明细数据
+    rpc GetAgentReciveDetail(G_JXC_APARDetailParmRequest) returns (G_JXC_ResultAgentAPARDetailResponse);
+    //获取是否支持进销存
+    rpc GetIsSupportJXC(google.protobuf.Empty) returns (G_JXC_ResultSupportJXCResponse);
+    //获取经营概况数据
+    rpc GetOperatorSituationData(G_JXC_BaseParmRequest) returns (G_JXC_ResultOperatorSituationResponse);
+    //验证操作员
+    rpc GetOperatorValid(google.protobuf.StringValue) returns (google.protobuf.StringValue);
+}
+
+message G_JXC_ResultBillDetailResponse {
+    int32 TotalCount=1;//总行数
+    repeated G_JXC_ResultBillDetail List=2;//单据详情商品列表
+}
+
+//单据详情商品
+message G_JXC_ResultBillDetail {
+    string ProductName=1;//商品名称
+    string ProductNumber=2;//商品编号
+    string Standard=3;//商品规格
+    double Price=4;//商品单价
+    double DiscountPrice=5;//折后单价
+    double DiscountTotal=6;//商品折后金额
+    double TaxPrice=7;//税后单价
+    double TaxTotal=8;//税后商品金额
+    double QTY=9;//商品数量
+    double Money=10;//商品金额
+    string UnitName=11;//商品单位名称
+    int32 IsGift=12;//是否是赠品（0：否 1：是）
+}
+
+message G_JXC_BillDetailParmRequest {
+    string BillId=1;//单据标识
+    int32 BillType=2;//单据类型
+    int32 PageIndex=3;//当前页号
+    int32 PageSize=4;//分页尺寸
+}
+//单据表头信息
+message G_JXC_ResultBillHeadResponse
+{
+    string BillNumber=1;//单据编号
+    string BillDate=2;//单据日期
+    string BranchName=3;//分支机构名称
+    string WerahourseName=4;//仓库名称
+    string EmployeeName=5;//经手人名称
+    string DepartmentName=6;//部门名称
+    string CustomerName=7;//往来单位名称
+    string GatherCustomerName=8;//结算单位名称
+    double TotalMoney=9;//单据总金额
+    double PreferenceMoney=10;//优惠金额
+    double RealMoney=11;//优惠后金额
+    double DiscountTotal=12;//折后金额
+    double TaxTotal=13;//折后金额
+    int32 ProductCount=14;//单据商品种类数量
+    double SaleQTY=15;//单据商品总数量
+    string Summary=16;//单据摘要
+}
+//老板一张表
+message G_JXC_BossDataParmRequest{
+    string StartTime=1;//开始时间
+    string EndTime=2;//结束时间
+    string BranchKey=3;//分支机构标识
+}
+//老板一张表
+message G_JXC_ResultBossData{
+    string Name=1;//名称
+    string Value=2;//值
+    repeated G_JXC_ResultBossData Child=3;//字节点
+}
+//老板一张表
+message G_JXC_ResultBossDataResponse{
+    repeated G_JXC_ResultBossData Data=1;
+}
+//筛选器参数
+message G_JXC_FilterDataRequest{
+    string StartTime=1;//开始时间
+    string EndTime=2;//结束时间
+    int32 PageIndex=3;//页码
+    int32 PageSize=4;//每页数量
+    int32 Type=5;//数据类型（0：商品分类，1：单据类型，2：客户分类，3：仓库列表，4：客户列表，5：部门，6：职员，7：分支机构）
+    string Keywords=6;//关键字
+    string ParentKey=7;//父级key
+    bool IsSpec=8;//是否只显示分类
+    string OperatorKey=9;//操作员标识
+}
+
+message G_JXC_TreeKey_ParmRequest{
+    string ParentKey=1;//父级key
+    string Keywords=2;//关键字
+    bool IsSpec=3;//是否只显示分类
+    string OperatorKey=4;//操作员标识
+}
+//树形结构数据逐级返回参数
+message G_JXC_TreeNodeOne{
+    string Id=1;//子id
+    string PrevId=2;//父id
+    string Name=3;//Name
+    bool HasChildren=4;//是否有子集
+    string PathCode=5;//节点路径
+    string PathName=6;//节点路径名称
+}
+
+message G_JXC_TreeNodeOneResponse{
+    repeated G_JXC_TreeNodeOne List=1;
+}
+//单据类型
+message G_JXC_ResultBillType{
+    string Name=1;//单据类型名称
+    string TypeId=2;//单据类型标识
+    string VchType=3;//单据类型
+}
+
+message G_JXC_ResultBillTypeResponse{
+    repeated G_JXC_ResultBillType List=1;
+}
+//获取仓库
+message G_JXC_ResultWerahourse{
+    string Name=1;//仓库名称
+    string WerahourseKey=2;//仓库标识
+}
+
+message G_JXC_ResultWerahourseResponse{
+    repeated G_JXC_ResultWerahourse List=1;
+}
+//获取部门
+message G_JXC_ResultDepartment{
+    string Name=1;//部门名称
+    string DepartmentKey=2;//部门标识
+}
+
+message G_JXC_ResultDepartmentResponse{
+    repeated G_JXC_ResultDepartment List=1;
+}
+//获取职员
+message G_JXC_ResultEmployee{
+    string Name=1;//职员姓名
+    string EmployeeKey=2;//职员标识
+}
+
+message G_JXC_ResultEmployeeResponse{
+    repeated G_JXC_ResultEmployee List=1;
+}
+//获取分支机构
+message G_JXC_ResultBranch{
+    string Name=1;//分支机构名称
+    string BranchKey=2;//分支机构标识
+}
+
+message G_JXC_ResultBranchResponse{
+    repeated G_JXC_ResultBranch List=1;
+}
+//资金余额
+message G_JXC_ResultMoneyDataResponse{
+    double TotalMoney=1;//资金余额
+}
+//应收应付
+message G_JXC_ResultAPARDataResponse{
+    double ReciveMoney=1;//应收总额
+    double PayMoney=2;//应付总额
+}
+//库存总金额和数量
+message G_JXC_ResultTotalStockResponse{
+    double Totalqty=1;//全部商品库存数量
+    double TotalMoney=2;//库存总金额
+}
+//经营概况中今天，昨天，近7天，近30天销售数据
+message G_JXC_ReusultSituationSaleDataResponse{
+    double TodaySaleMoney=1;//今天销售金额
+    double YestodaySaleMoney=2;//昨天销售金额
+    double SevenDaySaleMoney=3;//近7天销售金额
+    double ThirtyDaySaleMoney=4;//近30天销售金额
+}
+
+message G_JXC_BaseStatistisParmRequest{
+    string StartTime=1;//开始时间
+    string EndTime=2;//结束时间
+    int32 PageIndex=3;//页码
+    int32 PageSize=4;//每页数量
+    bool IsScan=5;//是否是扫码
+    string DepartKey=6;//部门标识
+    string EmployeeKey=7;//职员标识
+    string WerehourseKey=8;//仓库标识
+    string CustomerKeyword=9;//客户关键字
+    string CustomerClassKey=10;//客户分类标识
+    string ProductKeyword=11;//商品关键字
+    string ProductClassKey=12;//商品分类标识
+    int32 Sort=13;//排序方式（0：金额升序，1：金额降序，2：数量升序，3：数量降序，4：毛利升序，5：毛利降序）
+    int32 IsList=14;//是否按分类统计
+    int32 IsHasZero=15;//是否包含0数量或0金额的数据（0：不包含  -1：包含）
+    string OperatorKey=16;//操作员标识
+}
+
+message G_JXC_ResultProductSaleStatisticListResponse{
+    double TotalMoney=1;//总销售金额
+    double TotalProfits=2;//总毛利
+    repeated G_JXC_ResultProductSaleStatisticList List=3;
+    int32 TotalCount=4;
+}
+
+message G_JXC_ResultProductSaleStatisticList{
+    string ProductKey=1;//商品或分类标识
+    string ProductClassKey=2;//父级标识
+    string Name=3;//商品或分类名称
+    string Standard=4;//商品规格
+    string ProductNumber=5;//商品编号
+    int32 ChildNum=6;//子节点数量（如果有子节点说明是分类）
+    double QTY=7;//销售数量
+    double Money=8;//销售金额
+    double Profits=9;//销售毛利
+    double ProfitsRate=10;//毛利率（百分数，如果是99.9 表示99.9%）
+}
+
+//价格跟踪参数
+message G_JXC_ProductPriceTranceParmRequest {
+    string ProductKey=1;//商品标识
+    string CustomerKey=2;//客户标识
+    int32 PageIndex=3;//当前页号
+    int32 PageSize=4;//分页尺寸
+}
+
+//价格跟踪详情
+message G_JXC_ResultProductPriceTrance {
+    string ProductKey=1;//商品标识
+    string ProductName=2;//商品名称
+    string ProductNumber=3;//商品编号
+    string ProductBarcode=4;//商品条码
+    string Standard=5;//商品规格
+    string Model=6;//商品型号
+    string SaleTime=7;//最近销售时间
+    string BuyTime=8;//最近购买时间
+    string UnitName=9;//单位名称
+    string SalePrice=10;//最近销售单价
+    string BuyPrice=11;//最近采购单价
+}
+
+message G_JXC_ResultProductPriceTranceResponse {
+    int32 TotalCount=1;//总行数
+    repeated G_JXC_ResultProductPriceTrance List=2;//价格跟踪详情列表
+}
+
+//经营历程请求参数
+message G_JXC_OperatorHistoryParmRequest {
+    string StartTime=1;//开始时间
+    string EndTime=2;//结束时间
+    int32 PageIndex=3;//页码
+    int32 PageSize=4;//每页数量
+    string DepartKey=5;//部门标识
+    string EmployeeKey=6;//职员标识
+    string WerehourseKey=7;//仓库标识
+    string CustomerClassKey=8;//客户标识
+    string ProductKeyword=9;//商品标识
+    string ProductClassKey=10;//商品分类标识
+    string BillType=11;//单据类型标识
+    string BillNumber=12;//单据编号
+    string Remark=13;//单据摘要
+    int32 DateMode=14;//时间维度(0：今天  1：昨天  2：近7天  3：近30天  4：自定义)
+    bool IsScan=15;//是否是扫码
+    string OperatorKey=16;//操作员标识
+}
+//经营历程
+message G_JXC_OperatorHistoryDataList {
+    string BillID=1;//单据标识
+    int32 BillType=2;//单据类型
+    string BillTypeName=3;//单据类型名称
+    string BillNumber=4;//单据编号
+    string CustomerName=5;//客户姓名
+    string EmployeeName=6;//经手人姓名
+    string WerahourseName=7;//仓库名称
+    double ProductCount=8;//单据商品数量
+    double TotalMoney=9;//单据总金额
+    string Summary=10;//单据摘要
+}
+//经营历程返回
+message G_JXC_OperatorHistoryDataListResponse {
+    int32 TotalCount=1;//总行数
+    repeated G_JXC_OperatorHistoryDataList List=2;//经营历程列表
+}
+//获取单个商品销售情况流水
+message G_JXC_ResultOneProductSaleFlowResponse{
+    string ProductName=1;//商品名称
+    string Standard=2;//商品规格
+    string ProductNumber=3;//商品编号
+    string Barcode=4;//条码
+    double TotalSaleQTY=5;//商品销售数量（基本单位）
+    double TotalSaleMoney=6;//商品销售总金额
+    int32 TotalCount=7;
+    repeated G_JXC_ResultOneProductSaleList List=8;
+}
+
+message G_JXC_ResultOneProductSaleList{
+    string BillNumber=1;//单据编号
+    string BillDate=2;//单据日期
+    string BillTypeName=3;//单据类型名称
+    int32 BillType=4;//单据类型
+    string CustomerName=5;//客户姓名
+    string EmployeeName=6;//经手人姓名
+    string BillID=7;//单据ID
+    double SaleQTY=8;//商品销售数量（基本单位）
+    double SalePrice=9;//商品销售单价（基本单位）
+    double SaleMoney=10;//商品销售金额
+    double AssisSaleQTY=11;//商品销售数量（辅助单位）
+    double AssisSalePrice=12;//商品销售单价（辅助单位）
+}
+
+//获取客户销售统计
+message G_JXC_ResultCustomerSaleStatisticList{
+    string CustomerKey=1;//客户或分类标识
+    string CustomerClassKey=2;//父级标识
+    string Name=3;//客户或分类名称
+    int32 ChildNum=4;//子节点数量（如果有子节点说明是分类）
+    double QTY=5;//销售数量
+    double Money=6;//销售金额
+    double Profits=7;//销售毛利
+    double ProfitsRate=8;//毛利率（百分数，如果是99.9 表示99.9%）
+}
+
+message G_JXC_ResultCustomerSaleStatisticResponse{
+    double TotalMoney=1;//总销售金额
+    double TotalProfits=2;//总毛利
+    repeated G_JXC_ResultCustomerSaleStatisticList List=3;
+    int32 TotalCount=4;
+}
+//获取单个客户销售统计流水
+message G_JXC_ResultOneCustomerSaleFlowResponse{
+    string CustomerName=1;//客户名称
+    double TotalSaleQTY=2;//商品销售数量（基本单位）
+    double TotalSaleMoney=3;//商品销售总金额
+    int32 TotalCount=4;
+    repeated G_JXC_ResultOneCustomerSaleList List=5;
+}
+
+message G_JXC_ResultOneCustomerSaleList{
+    string BillNumber=1;//单据编号
+    string BillDate=2;//单据日期
+    string BillTypeName=3;//单据类型名称
+    int32 BillType=4;//单据类型
+    string CustomerName=5;//客户姓名
+    string EmployeeName=6;//经手人姓名
+    string BillID=7;//单据ID
+    double SaleQTY=8;//商品销售数量（基本单位）
+    double SaleMoney=9;//商品销售金额
+    double SalePrice=10;//商品销售单价
+}
+
+//获取职员销售统计
+message G_JXC_ResultEmployeeSaleStatisticResponse{
+    double TotalMoney=1;//总销售金额
+    double TotalProfits=2;//总毛利
+    repeated G_JXC_ResultEmployeeSaleStatisticList List=3;
+    int32 TotalCount=4;
+}
+
+message G_JXC_ResultEmployeeSaleStatisticList{
+    string EmployeeKey=1;//职员或分类标识
+    string EmployeeClassKey=2;//父级标识
+    string Name=3;//职员或分类名称
+    int32 ChildNum=4;//子节点数量（如果有子节点说明是分类）
+    double QTY=5;//销售数量
+    double Money=6;//销售金额
+    double Profits=7;//销售毛利
+    double ProfitsRate=8;//毛利率（百分数，如果是99.9 表示99.9%）
+}
+
+//获取职员销售统计流水
+message G_JXC_ResultOneEmployeeSaleFlowResponse{
+    string EmployeeName=1;//职员名称
+    double TotalSaleQTY=2;//商品销售数量（基本单位）
+    double TotalSaleMoney=3;//商品销售总金额
+    int32 TotalCount=4;
+    repeated G_JXC_ResultOneEmployeeSaleList List=5;
+}
+
+message G_JXC_ResultOneEmployeeSaleList{
+    string BillNumber=1;//单据编号
+    string BillDate=2;//单据日期
+    string BillTypeName=3;//单据类型名称
+    int32 BillType=4;//单据类型
+    string CustomerName=5;//客户姓名
+    string EmployeeName=6;//经手人姓名
+    string BillID=7;//单据ID
+    double SaleQTY=8;//商品销售数量（基本单位）
+    double SaleMoney=9;//商品销售金额
+    double SalePrice=10;//商品销售单价
+}
+
+//获取往来单位应收应付
+message G_JXC_ResultAgentAPARDataResponse{
+    double TotalMoney=1;//应收总额
+    double TotalPreMoney=2;//应付总额
+    int32 TotalCount=3;
+    repeated G_JXC_ResultAgentAPARDataList List=4;
+}
+
+message G_JXC_ResultAgentAPARDataList{
+    string AgentKey=1;//往来单位或分类标识
+    string AgentClassKey=2;//父级标识
+    string Name=3;//往来单位或分类名称
+    string TelePhone=4;//电话
+    string LinkMan=5;//联系人姓名
+    double ReciveMoney=6;//应收金额
+    double PreReciveMoney=7;//预收金额
+    double PayMoney=8;//应付金额
+    double PrePayMoney=9;//预付金额
+}
+
+message G_JXC_APARDetailParmRequest{
+    string KeyWords=1;//关键字
+    string AgentKey=2;//往来单位标识
+    int32 IsHasZero=3;//是否包含0数量或0金额的数据（0：不包含  -1：包含）
+    int32 IsRP=4;//是应收明细还是应付明细（0：应收  1：应付）
+    string StartTime=5;//开始时间
+    string EndTime=6;//结束时间
+    int32 PageIndex=7;//页码
+    int32 PageSize=8;//每页数量
+    string OperatorKey=16;//操作员标识
+}
+
+//获取单位应收明细数据
+message G_JXC_ResultAgentAPARDetailResponse{
+    string Name=1;//客户名称
+    string LinkMan=2;//联系人名称
+    string TelePhone=3;//电话号码
+    double APARMoney=4;//应收或应付总额
+    double FirstAPARMoney=5;//此前应收或应收总额（期初应收或期初应付）
+    int32 TotalCount=6;
+    repeated G_JXC_ResultAgentAPARDetailList List=7;
+}
+
+message G_JXC_ResultAgentAPARDetailList{
+    string BillID=1;//单据标识
+    int32 BillType=2;//单据类型
+    string BillTypeName=3;//单据类型名称
+    string BillNumber=4;//单据编号
+    double TotalMoney=5;//单据金额
+    double IVMoney=6;//应收或应付金额（IVMoney=TotalMoney-IVMoney）
+    double GatherMoney=7;//已收或已付金额
+    string BillDate=8;//单据日期 
+}
+
+message G_JXC_ResultSupportJXCResponse{
+    string result=1;//支持返回：success，不支持返回：提示信息
+}
+//销售概况
+message G_JXC_ResultOperatorSituationResponse{
+    double SaleMoney=1;//销售金额
+    double Income=2;//收入
+    int32 SaleBillCount=3;//销售单据数量
+    double SaleProductCount=4;//销售商品数量
+    double SaleProfits=5;//销售毛利
+    int32 BuyBillCount=6;//采购单据数量
+    double BuyProductCount=7;//采购商品数量
+    double BuyMoney=8;//采购金额
+    double Expense=9;//支出
+}
+
+message G_JXC_BaseParmRequest{
+    string StartTime=1;//开始时间
+    string EndTime=2;//结束时间
+}
+

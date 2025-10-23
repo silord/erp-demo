@@ -1,0 +1,6 @@
+东方新特药有限公司
+token地址：https://open.handday.cn/grantauth/gettoken
+"corpId":150046974,
+ "appType": 1,
+ "appId": "06e1014e6bfc11ee93b40c42a1db2810 ",
+"appSecret": "262c405ee2d13482ea03ad7d83e9ebfee02d6584e4faa19aa172829569af2c3f"

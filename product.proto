@@ -1,0 +1,393 @@
+syntax = "proto3";
+import "common.proto";
+import "google/protobuf/wrappers.proto";
+
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc.Product";
+
+//商品管理
+service Product {
+    //获取商品分类列表
+    rpc GetPageProductClassifyList(G_BaseInfoRequest) returns(G_PageProductClassifyResponse);
+
+    //获取商品Code+ErpKey列表
+    rpc GetProductMatchingList(G_ProductMatchingRequest) returns(G_ProductMatchingListResponse);
+
+    //商品拉取不需要参数
+    rpc ProductPullTask(G_ProductPullRequest) returns (G_PushResponse);
+
+    //商品价格跟踪
+    rpc GetProductPriceTrackingList(G_ProductPriceTrackListRequest) returns(G_ProductPriceTrackListResponse);
+
+    //获取商品库存
+    rpc GetProductStocksList(G_ProductStocksRequest) returns(G_PageProductStocksResponse);
+
+    //商品库存分布
+    rpc GetProductWarehouseStockslist(G_ProductWarehouseStocksRequest) returns (G_PageProductStocksResponse);
+
+
+    //增量推送商品信息 G_PageProductPushInfoResponse
+    rpc PushProduct(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送账面商品库存 G_PageProductStocksResponse
+    rpc PushProductStock(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送虚拟商品库存 G_PageProductStocksResponse
+    rpc PushProductVirtualStock(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送商品价格 G_PageProductPriceResponse
+    rpc PushProductPrice(G_PushRequest) returns(G_PushResponse);
+
+
+    //拉取所有商品最高跟踪价、最低跟踪价、最近跟踪价、成本价
+    rpc ProductSupplementPricePull(G_ProductMatchingRequest) returns (G_PageProductSupplementPriceResponse);
+
+    //根据商品key获取商品列表 
+    rpc ProductListByKeys(G_ProductListByKeysRequest) returns (G_ProductListByKeysResponse);
+
+     //增量推送商品价格 G_PageProductUnitResponse
+    rpc PushProductUnits(G_PushRequest) returns(G_PushResponse);
+
+    //根据条件查询推送最旧商品生产日期信息列表（第三方ERP连接定制协议）
+    rpc GetProductDateList(G_PageProductDateListRequest) returns(G_PageProductDateListResponse);
+
+    //增量推送商品状态
+    rpc PushProductState(G_PushRequest) returns(G_PushResponse);
+
+    //获取商品sku状态
+    rpc GetProductSkuState(G_ProductSkuStateRequest) returns(G_ProductSkuStateResponse);
+
+    //增量推送商品属性
+    rpc PushProductAttribute(G_PushRequest) returns(G_PushResponse);
+}
+
+//返回商品分类信息
+message G_PageProductClassifyResponse {
+    int32 TotalCount=1;
+    repeated G_ProductClassifyInfoResponse Data=2;
+}
+message G_ProductClassifyInfoResponse {
+    string ClassifyKey=1; //商品分类Key
+    string ClassifyName=2; //商品分类名称
+    string ParentKey=3; //上级ID
+}
+
+//需要商品匹配的Code
+message G_ProductMatchingRequest {
+    repeated string Data=1;
+}
+
+//返回匹配的商品
+message G_ProductMatchingListResponse {
+    repeated G_ProductMatchingRespone Data=1;
+    message G_ProductMatchingRespone {//列表
+        string ErpKey=1;
+        string ErpCode=2;
+        string ErpName=3;
+        string ParentKey=4;//父级Key
+    }
+}
+
+//商品拉取请求参数
+message G_ProductPullRequest {   
+    string CallBackUrl=1;//回调地址
+    int32 PageSize=2;//每次回调Post行数
+    string Param=3; //自定义字段
+    int32 ProdState=4;//拉取商品的状态 1:正常 2: 停用 3:全部
+}
+
+//商品价格跟踪
+message G_ProductPriceTrackListRequest {
+    string CustomerKey=1;//客户Key
+    repeated G_ProductPriceTrackRequest Data=2;//跟踪的商品信息
+    string BranchName=3;//机构
+    string BranchKey=4;//机构Key
+}
+message G_ProductPriceTrackRequest {
+    string UnitName=1;//商品单位
+    string ProductKey=2;//商品Key
+    string WarehouseName=3;//仓库名称
+    string WarehouseId=4; //仓库ID
+    repeated G_ProductSkuAttribute SkuAttributes=5;
+}
+
+//商品价格跟踪返回数据
+message G_ProductPriceTrackListResponse {
+    repeated G_ProductPriceTrackResponse Data=1;
+    string Msg=2;//如果有错误就返回，没有错误返回为空
+    message G_ProductPriceTrackResponse {
+        string ProductKey=1;
+        string CustomerKey=2;
+        string WarehouseName=3;
+        string UnitName=4;
+        string UnitKey=5;
+        double TrackPrice=6;
+        double TaxRate=7;
+        double Discount=8;//折扣率
+        string WarehouseId=9;//仓库ID
+        double Price=10;
+        repeated G_ProductSkuAttribute SkuAttributes=11;
+    }
+}
+
+//获取商品库存请求参数
+message G_ProductStocksRequest {    
+    G_StockJoinMethod StockType=1;//库存类型  
+    repeated string WarehouseNames=2;//仓库名称
+    repeated string ProductKeys=3;//商品Keys
+    string BranchName=4;//机构
+    repeated string WarehouseIds=5; //[大重构]仓库IDs集合格式（"1,2,3"）
+    repeated G_ProductSkuRequest Skus=6;
+}
+//商品sku
+message G_ProductSkuRequest{
+    string SkuKey=1;
+    string ProductKey=2;
+    repeated G_ProductSkuAttribute SkuAttributes=3;
+}
+
+//获取商品库存请求参数
+message G_PageProductStocksResponse {
+    repeated G_ProductStocksResponse Data=1; //商品库存列表
+    int64 CorpId=2;  //推送终端客户 ID
+    int32 TotalCount=3; //推送总条数
+    string Msg=4;//
+}
+message G_ProductStocksResponse {
+    string WarehouseId=1;//仓库ID
+    string WarehouseKey=2;//仓库Key
+    string WarehouseName=3;//仓库名称
+    string ProductId=4;//商品ID
+    string ProductKey=5;//商品Key
+    string ProductName=6; //商品名称
+    double Qty=7; //当前库存量
+    string SkuName=8;//SkuName
+    double CostMoney=9; //商品成本总金额
+    repeated G_ProductSkuStockResponse SkuQty=10;//sku库存数量
+}
+message G_ProductSkuStockResponse{
+    repeated G_ProductSkuAttribute Attributes=1;//Sku属性
+    google.protobuf.DoubleValue Qty=2;//库存数量
+    string SkuKey=3;//SkuKey
+}
+
+//商品库存分布请求参数
+message G_ProductWarehouseStocksRequest {  
+    G_StockJoinMethod StockType=1; //库存类型   
+    string ProductKey=2;//商品Key 一次仅查询一个
+    string BranchName=3;//机构名称
+}
+
+//同步商品信息
+message G_PageProductPushInfoResponse
+{
+    int32 TotalCount=1;
+    int64 CorpId=2;
+    repeated G_ProductPushInfoResponse Data=3;
+}
+message G_ProductPushInfoResponse
+{
+    int64 ProductId=1;//商品ID
+    string ProductKey=2;//商品Key
+    string ProductCode=3;//商品编号
+    string ProductName=4;//商品名称
+    string ProductSpec=5;//商品规格
+    string BarCode=6;//商品条形码
+    string Unit=7;//商品基本单位
+    string Unit1=8;//商品辅助单位1
+    double UnitRate1=9; //商品辅助单位1换算率
+    string Unit2=10; //辅助单位2
+    double UnitRate2=11; //辅助单位2换算率
+    string Unit3=12; //辅助单位3
+    double UnitRate3=13; //辅助单位3换算率
+
+    string ColorIds=14;//颜色清单ID 1,2
+    string ColorCodes=15; //颜色清单编号 001,002
+    string ColorNames=16; //颜色清单名称 红色,蓝色
+
+    string SizeIds=17;//尺寸清单ID 1,2
+    string SizeCodes=18; //尺寸清单编码 001,002
+    string SizeNames=19; //尺寸清单名称 大码,小码
+
+    string ClassifyKey=20;//商品分类key
+    string Brand=21;//商品品牌
+    repeated G_ProductAttribute Attributes=22; //商品属性
+
+    string WarehouseKey = 23; // 默认发货仓库Key
+    string WarehouseCode = 24; // 默认发货仓库编号
+    string WarehouseName = 25; // 默认发货仓库名称
+}
+
+//同步商品价格
+message G_PageProductPriceResponse
+{
+    int64 CorpId=1;
+    int32 TotalCount=2;
+    repeated G_ProductPriceResponse Data=3;
+}
+message G_ProductPriceResponse
+{
+    string ProductKey=1;//商品Key
+    string ProductName=2; //商品名称
+    string UnitKey=3;//单位Key
+    string UnitName=4;//单位名称
+    double Price=5;//单位价格
+    string PriceName=6;//价格表字段名称
+    string PriceCnName=7;//价格中文名称
+    repeated G_ProductSkuPrice SkuPrice=8;
+}
+message G_ProductSkuPrice{
+    repeated G_ProductSkuAttribute Attributes=1;
+    double Price=2;
+}
+
+//拉取所有商品最高跟踪价、最低跟踪价、最近跟踪价、成本价数据对象
+message G_PageProductSupplementPriceResponse
+{
+    int64 CorpId=1;
+    repeated G_PageProductSupplementPriceDetialResponse Data=2;
+}
+
+//拉取所有商品最高跟踪价、最低跟踪价、最近跟踪价、成本价数据详细
+message G_PageProductSupplementPriceDetialResponse
+{
+    string ProductKey=1;//商品Key
+    double MaxPrice=2;//最高售价
+    double MinPrice=3;//最低售价
+    double RecentPrice=4;//最近售价
+    double CostPrice=5;//成本价
+    double MostCount=6;//最多售价个数
+    double MostPrice=7;//最多售价
+    string Unit=8;//计量单位
+}
+
+//根据商品Key获取商品列表
+message G_ProductListByKeysRequest {
+    repeated string Keys=1;
+}
+
+
+//根据商品Key获取商品列表
+message G_ProductListByKeysResponse {
+    repeated G_ProductListByKeysInfo Data=1;//商品编号
+}
+message G_ProductListByKeysInfo {
+    string ProductKey=1;//商品编号
+    string ProductName=2;//商品名称
+    string ProductCode=3;//商品编号
+    string BarCode=4;//商品条码
+    int32 IsDisable=5;//是否停用
+    string ClassifyKey=6;//商品分类
+    repeated G_ProductListByKeysUnit Units=7;//单位详情
+    repeated G_ProductAttribute Attributes=8;
+    string WarehouseKey = 9; // 默认发货仓库Key
+    string WarehouseCode = 10; // 默认发货仓库编号
+    string WarehouseName = 11; // 默认发货仓库名称
+    string Sku=12;// 商品规格值
+}
+message G_ProductListByKeysUnit{
+    int64 UnitID=1;//商品ID
+    string Name=2;//商品名称
+    double Rate=3;//商品换算率
+    int32 IsDefault=4;//是否默认
+}
+
+//同步商品计量单位
+message G_PageProductUnitResponse
+{
+    int64 CorpId=1;
+    int32 TotalCount=2;
+    repeated G_ProductUnitDataResponse Data=3;
+}
+message G_ProductUnitDataResponse
+{
+    string ProductId=1;//商品ID
+    string ProductKey=2;//商品Key
+    repeated G_ProductUnitsResponse Units=3; //商品计量单位集合
+}
+message G_ProductUnitsResponse
+{
+    string Name=1;//计量单位名称
+    double Rate=2; //计量单位换算率
+    int32 IsBaseUnit=3;//是否基本单位
+    string OldName=4;//上次计量单位名称
+    double OldRate=5; //上次计量单位换算率
+    int32 Status=6;//状态
+}
+message G_ProductUnitsTempResponse
+{
+    string ProductId=1;//商品ID
+    string ProductKey=2;//商品Key
+    string Name=3;//计量单位名称
+    double Rate=4; //计量单位换算率
+    int32 UnitCount=5;//计量单位数量
+    int32 IsBaseUnit=6;//是否基本单位
+    string OldName=7;//上次计量单位名称
+    double OldRate=8; //上次计量单位换算率
+    string UnitBz=9;//单位标识
+    int32 Status=10;//状态
+}
+
+//查询商品最旧生产日期列表入参
+message G_PageProductDateListRequest {    
+    repeated string ProductKeys=1;//商品Keys
+}
+
+//商品最旧生产日期分页列表
+message G_PageProductDateListResponse {
+    repeated G_ProductDateResponse Data=1; //商品最旧生产日期列表
+    int64 CorpId=2;  //推送终端客户 ID
+    int32 TotalCount=3; //推送总条数
+    string Msg=4;//信息
+}
+
+//商品最旧生产日期
+message G_ProductDateResponse {   
+    string ProductId=4;//商品ID  
+    string ProductKey=5;//商品Key 
+    string ProductName=6; //商品名称
+    string OldestDate=7; //最旧生产日期
+}
+// 商品状态返回信息
+message G_ProductStateResponse
+{
+    int64 CorpId=1;
+    repeated G_ProductState Data=2;
+}
+
+//商品状态推送
+message G_ProductState
+{
+    string ProductId=1;//商品ID
+    string ProductKey=2;//商品Keys=1
+    string State=3;//商品状态（1：正常 2：停用 3：删除）
+}
+
+//商品sku状态请求
+message G_ProductSkuStateRequest{
+    repeated G_ProductSkuRequest Skus=1;
+}
+
+//商品sku状态响应
+message G_ProductSkuStateResponse{
+    repeated G_ProductSkuState Data=1;
+}
+
+//商品sku状态
+message G_ProductSkuState{
+    string SkuKey=1;
+    string ProductKey=2;
+    repeated G_ProductSkuAttribute SkuAttributes=3;
+    int32 IsDisabled=4;//是否停用
+}
+
+//同步商品属性
+message G_PageProductAttributeResponse{
+    int64 CorpId=1;
+    int32 TotalCount=2;
+    repeated G_ProductAttributeResponse Data=3;
+}
+message G_ProductAttributeResponse{
+    string ProductKey=1;
+    repeated G_ProductAttribute Attributes=2;
+}

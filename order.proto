@@ -1,0 +1,249 @@
+syntax = "proto3";
+import "common.proto";
+import "customer.proto";
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc.Order";
+
+//订单管理
+service Order {
+
+    //同步销售订单（订单，销售单，退货单，合在一起）
+    rpc SynchroSaleOrderList(G_SyncBillListRequest) returns(G_SyncBillListInfoResponse);
+
+    //同步收款单、付款单
+    rpc SynchroReceiptOrderList(G_SyncBillListRequest) returns(G_SyncBillListInfoResponse);
+
+    //同步零售单
+    rpc SynchroLsSaleOrderList(G_SyncBillListRequest) returns(G_SyncBillListInfoResponse);
+
+
+    //增量推送已过账的单据（1 销售出库  2 销售退货 3 收款 4 付款） G_PagePushBillResponse
+    rpc PushPostBill(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送ERP已删除的单据（ 1 销售出库  2 销售退货 3 收款 4 付款） G_PagePushBillResponse
+    rpc PushDeleteBill(G_PushRequest) returns(G_PushResponse);
+
+    //推送已出库订单
+    rpc PushDeliveryBill(G_PushRequest) returns(G_PushResponse);
+
+    //增量推送 管家婆云 单据信息 （出库、退换货单 用于 CRM查询8大交易数据）
+    rpc PushBillCenterList(G_PushRequest) returns(G_PushResponse);
+
+    // 手动拉去erp中单据到指掌订货系统中
+    rpc PushOutBillSync(G_PushRequest)returns(G_ErpOutBillResponse);
+}
+
+
+//单据同步通用返回
+message G_SyncBillListInfoResponse
+{
+    repeated G_SyncBillInfoResponse Data=1;
+}
+message G_SyncBillInfoResponse
+{
+    string ErpKey =1;// ERP的key
+    string BillKey=2;// 单据编号
+    G_SyncStateType SyncState=3;// 同步状态
+    string SyncMsg=4;// 同步消息
+    G_BillType BillType=5;//单据类型
+    int64 ErrorCode=6;//错误码
+}
+
+//同步单据列表
+message G_SyncBillListRequest
+{
+    repeated G_SyncBillRequest Data=1; 
+    string BranchKey=2;
+    string EmployeeName=3;
+    string EmployeeKey=4;
+    string DepartmentName=5;
+    string DepartmentKey=6;
+    string CallBackUrl=7;
+}
+
+//单据信息
+message G_SyncBillRequest
+{
+    string BillKey=1 ;// 单据业务的Id
+    string BillCode=2 ;// 单据编号
+    G_BillType BillType=3;//单据类型
+    string CustomerKey=4 ;// 客户Key
+    string CustomerName=5 ;// ERP中客户名称
+    string EmployeeKey=6 ;// 经手人Key（职员key）传入的应该是职员名称，跟据职员名称取得对应的Key，有一些ERP还有配置
+    string DepartmentKey=7;//部门Key
+    string WarehouseKey=8 ;// 仓库Key（收付款不用）
+    string WarehouseName=9;//仓库名称,先留在这儿，好像只有几个ERP需要这玩意
+    string TabulateDate=10 ;// 制单日期
+    string Remark=11 ;// 备注
+    double TotalPrice=12 ;// 退货或出库单据总金额，应付金额或应收金额
+    string DeliveryDate=13 ;// 交货时间
+    string Address=14 ;// 收货地址
+    double PreferentialMoney=15 ;// 优惠金额（订货用）
+    string FareGoodsCode=16 ;// 运费商品编号
+    double Fare=17 ;// 单据运费
+    string EntryTime=18 ;// 录单日期用于修改了订货录单日期就用这个???不知道具体用处
+    string Creator=19 ;// 制单人（某些ERP要，以前是处理好了再传入）在这儿好像可以不用
+    int32  UnitTransform=20;// 是否换算成基本单位生成单据
+    repeated G_SyncBillDetailInfo Details=21; //单据明细列表
+    string Comment=22; //说明、摘要
+    string ReceiptDate=23;//收款日期
+    string BranchKey=24;//机构Key
+    string MemberKey=25;//会员卡主键ID
+    string MembershipCardNo=26;//会员卡号
+    double DiscountAmount=27;//零售优惠金额
+    string AccountKey=28;//收款账户key
+    string DHBillCode=29;//订货对应的单据编号，传入的时候还是 BillCode，需要在后面赋值一次
+    int32 targetReverse=30;// 服装，服装.net 母婴系统单据折让是否反算到商品明细上
+    repeated G_SyncBillMultiAccount MultiAccount=31; // 多账户收款集合
+
+}
+//单据明细
+message G_SyncBillDetailInfo
+{
+    int64 BillDetailKey=1 ;// 单据明细主键
+    int64 BillKey=2 ;// 单据业务的Id
+    string ProductKey=3 ;// 商品Key
+    string ProductName=4 ;// 商品名称
+    string WarehouseKey=5 ;// 仓库Key（退货使用）
+    double BasicUnitQty=6 ;// 基本单位对应数量
+    double BasicUnitPrice=7 ;// 基本单位对应价格
+    double BasicUnitDiscountPrice=8 ;// 基本单位对应折扣单价
+    double BasicUnitTaxPrice=9 ;// 基本单位对应税后单价
+    double Qty=10 ;// 商品数量
+    double Price=11 ;// 商品单价（收付款不用）
+    double Total=12 ;// 退货或出库商品总金额，收付款行金额(收付款明细上的金额用这个)
+    double Discount=13 ;// 折扣率：例如：8.5折，表示为0.85
+    double DiscountPrice=14 ;// 折扣单价
+    double DiscountTotal=15 ;// 折扣总价
+    double Tax=16 ;// 税率：例如：17%的税，传递：1.17
+    double TaxPrice=17 ;// 税后单价
+    double TaxTotal=18 ; // 税后总价
+    double TaxLimit=19 ;// 税额
+    int32 IsGift=20 ;// 是否赠品
+    string Remark=21 ;// 退货或出库备注，收付款行摘要
+    string UnitName=22 ;// 商品的计量单位
+    string UnitID=23;//商品单位ID(传入可不定义)
+    double UnitRate=24;//商品单位换算率（传入可不定义）
+    double UnitConversion=25 ; // 基本单位转换,等于1，表示基本单位
+    int32 IsSpcial=26 ;// 是否为促销商品
+    string SettleAccountName=27; //科目不是必传字段
+    int32 OrderType=28;//单据类型（0普通单子，1优惠单子，2运费单子）
+
+    string Ubarcode=29;//商品条形码
+    double CostPrice=30;//成本价
+    double CostTotal=31;//成本金额
+    string CostMode=32;//成本算法
+    string GoodsBatchID=33;//批次ID
+    string Goodsno=34;//批号
+    string BatchNo=35;//批次别名
+    string ProductionDate=36;//生产日期
+    string UsefulEndDate=37;//效期
+    double RetailPrice=38;//零售价
+
+    double ColorId=39;//颜色ID
+    double SizeId=40;//尺码ID
+    repeated G_ProductSkuAttribute Attributes=41;
+}
+
+message G_PagePushBillResponse
+{
+    int64 CorpId=1;
+    int32 TotalCount=2;
+    repeated G_PushBillResponse Data=3;
+}
+message G_PushBillResponse
+{
+    string BillErpKey=1; //ERP 单据Key
+    string BillErpCode=2; //ERP 单据CODE
+    G_BillType BillType=3; //单据类型
+    string BillKey=4;//单据在指掌中的key
+}
+//主要大重构 多账户收款使用
+message G_SyncBillMultiAccount{    
+    string Account=1; //这个地方默认传收款账户名称过来，可扩展传id
+    double Total=2; // 账户对应的收款金额    
+}
+
+//管家婆云 单据信息 （出库、退换货单 用于 CRM查询8大交易数据）
+message G_PagePushBillCenterResponse
+{
+    int64 CorpId=1;
+    repeated G_PushBillCenterResponse Data=2;
+}
+
+//管家婆云 单据信息 （出库、退换货单 用于 CRM查询8大交易数据） 实体
+message G_PushBillCenterResponse
+{
+    int64 CorpId=1 ;// 单据明细主键
+    int32 BillType=2 ;// 单据类型（1.销售出库单、2.销售换货单、3.销售退货单必填）
+    string InputTime=3 ;// 录单时间  yyyy-MM-dd
+    string AccountTime=4 ;// 过账时间 yyyy-MM-dd HH:mm:ss
+    string BillNO=5 ;// 单据编号
+    string BillId=6 ;// 单据ID
+    string CustomId=7 ;// 客户ID
+    string CustomName=8 ;// 客户名称
+    double BillAmount=9 ;// 价税合计
+}
+
+// 单据同步到指掌中内容
+message G_ErpOutBillResponse
+{
+    string CorpId=1; // 当前对接的企业号
+    string CallBackUrl=2; // 单据同步消息回调地址
+    repeated G_ErpOutBillInfo Data=3; //同步的单据信息
+}
+// ERP组装同步单据到指掌销售出库单中
+message G_ErpOutBillInfo
+{
+    string BillDate=1 ;// 单据时间  yyyy-MM-dd HH:mm:ss
+    string CustomerName=2 ;// 客户名称(结算单位)
+    string depotName=3 ;// 仓库名称
+    string HandlerName=4 ;// 职员
+    string BillRemark=5 ;// 单据表头备注，摘要
+    float EraseMoney=6 ;// 抹零金额，
+    int32 InvoiceType=7;// 发票类型，默认不开发票 0
+    float BillTax=8 ;// 税率,默认为0 采用100分制13%就传13 
+    float ReceiveAddress=9 ; // 收货信息
+    float BuyerRemark=10 ;// 买家备注
+    float PayMoney=11 ;// 收款金额 =单据总金额-抹零金额
+    repeated G_ErpOutBillDetail  Details=12 ; // 单据明细
+    repeated G_CustomerInfo CustomerInfo=13; //客户详细信息(验证客户如果不存在时候自动保存客户)
+}
+
+message G_ErpOutBillDetail
+{
+
+    string ProductCode=1;// 商品编号
+    string ProductName=2;// 商品名称
+    string SkuBarCode=3;
+    string SkuName=4;// 规格
+    string DepotName=5 ;// 仓库名称
+    string UnitName=9 ;// 单位名称
+    float Qty=10 ;// 数量
+    float Price=11 ;// 单价
+    float Total=12 ;// 金额
+    float Discount=13 ;// 折扣
+    float DiscountPrice=14 ;// 扣后单价
+    float DiscountTotal=15 ;// 折后金额
+    float Tax=16 ;// 税率
+    float TaxPrice=17 ;// 含税单价
+    float TaxTotal=18;// 含税金额
+    int32 IsGift=19;//是否是赠品 0非赠品 ，1赠品； 默认0
+    string DetailRemark=20;// 明细备注
+}
+message G_CustomerInfo
+{
+    string CustomerName=1 ;// 客户名称
+    string CustomerKey=2 ;// 客户唯一编码
+    string CustomerCode=3 ;// 客户编码
+    string Address=4 ;// 客户地址
+    string Tel=5;
+    string CategoryKey=6 ;// 客户分类ID
+    string CategoryName=7;//客户分类名称
+    float  CreditLimit=8 ;// 客户的信用额度
+    string BusinessManagersName=9 ;// 业务经理名称
+    repeated G_LinkInfoResponse LinkInfos=10; //联系人
+    string CustomerId=11;  //监听使用
+    string BranchKey =12;  //分支机构编码
+
+}

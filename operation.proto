@@ -1,0 +1,41 @@
+syntax = "proto3";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+// 定义命名空间，一般是项目名或者解决方案名
+option csharp_namespace = "HandDay.Grpc.Operation";
+
+service Operation
+{
+    //GRPC 版本
+    rpc GetGrpcVerion(google.protobuf.Empty) returns (google.protobuf.StringValue);
+
+    //向服务端发送文件
+    rpc SendFile(stream FilePart) returns (FileOpResult);
+
+    //重启服务
+    rpc RestGrpcServices(google.protobuf.StringValue) returns (google.protobuf.StringValue);
+
+    //重启服务
+    rpc GetGrpcServicesDllInfo(google.protobuf.StringValue) returns (google.protobuf.StringValue);
+
+    //获取 grpc windows服务名称
+    rpc GetGrpcWindowServiceName(google.protobuf.StringValue) returns (google.protobuf.StringValue);
+}
+
+//文件传输体
+message FilePart{
+    //文件名，不含路径，包含扩展名
+    string  file_name = 1;
+    //文件内容，查询文件列表时内容为空
+    google.protobuf.BytesValue file_data = 2;
+    //文件存放命名空间
+    google.protobuf.StringValue name_space = 3;
+}
+
+//文件操作结果
+message FileOpResult{
+    //结果
+    bool ok = 1;
+    google.protobuf.StringValue msg = 2;
+}

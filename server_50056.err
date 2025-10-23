@@ -1,0 +1,5 @@
+[2025-10-23 17:20:39,249] INFO: Configured host=0.0.0.0:50056 workers=10
+WARNING: All log messages before absl::InitializeLog() is called are written to STDE[2025-10-23 17:20:41,201] INFO: SynchroSaleOrderList called with 1 bills
+[2025-10-23 17:20:41,205] INFO: Processed bill BILL-XYZ: No details to sync
+0000 00:00:1761211239.258262    6308 add_port.cc:83] Failed to add port to server: No address added out of total 1 resolved for '0.0.0.0:50056'
+[2025-10-23 17:20:39,258] INFO: Starting gRPC server on 127.0.0.1:50056 (workers=10)
