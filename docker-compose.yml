@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  erp-grpc:
+    build: .
+    image: erp-demo:latest
+    container_name: erp_demo_grpc
+    command: python erp_service.py
+    ports:
+      - "50051:50051"
+    volumes:
+      - ./sync_results.db:/app/sync_results.db
+      - ./:/app
+    environment:
+      - ERP_TARGET=localhost:50051
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import socket,sys; s=socket.socket(); s.settimeout(2); s.connect(('127.0.0.1',50051)); s.close();\""]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  erp-admin:
+    build: .
+    image: erp-demo:latest
+    container_name: erp_demo_admin
+    command: python admin_server.py
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./sync_results.db:/app/sync_results.db
+      - ./:/app
+    environment:
+      - FLASK_ADMIN_HOST=0.0.0.0
+      - FLASK_ADMIN_PORT=8080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8080/api/sync-results', timeout=2)\"" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s

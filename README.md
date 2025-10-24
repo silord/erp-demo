@@ -12,6 +12,86 @@ ERP Demo — 管理 & 联调工具
 
 `sync_results.db` 位于项目根（和 `erp_service.py` 同目录）。使用 `show-sync-results.py` 查看。
 
+启动 admin 管理页面（开发）
+
+    python admin_server.py
+
+然后在浏览器打开 http://127.0.0.1:8080/ 查看表格并使用顶部的联调按钮（dry-run 默认）。
+
+Docker 化（构建与运行）
+
+项目包含 Dockerfile 和 docker-compose.yml，可将服务打包成镜像并用 docker-compose 启动：
+
+构建镜像：
+
+    docker build -t erp-demo:latest .
+
+使用 docker-compose 启动（会把 sqlite 数据库文件挂载到宿主目录）:
+
+    docker compose up --build -d
+
+服务会暴露端口：
+- gRPC: 50051
+- admin UI: 8080
+
+示例（不使用 docker-compose，直接运行镜像）：
+
+    docker run -p 50051:50051 -p 8080:8080 -v $(pwd)/sync_results.db:/app/sync_results.db erp-demo:latest
+
+注意：镜像内会用 `start.sh` 启动 `admin_server.py`（后台）并以 `erp_service.py` 作为前台进程。此模式适合开发演示；生产请用进程管理或把 admin 与 gRPC 服务拆分到不同容器。
+
+使用国内镜像提前拉取依赖（可选但在部分网络受限环境强烈推荐）
+
+1) 在构建镜像前，你可以先在宿主机把 requirements 中的依赖下载为 wheel 文件，使用清华镜像或阿里镜像：
+
+PowerShell:
+
+```powershell
+cd C:\Users\yuj\Desktop\mmdh\mmapi\vv4\erp_demo
+.
+# 使用内置脚本（fetch_wheels.ps1），默认使用清华镜像
+./fetch_wheels.ps1
+```
+
+Linux / macOS:
+
+```bash
+cd /path/to/erp_demo
+./fetch_wheels.sh
+```
+
+这会在项目根生成 `./wheels/` 目录并下载对应的 whl 包。随后构建镜像时，Dockerfile 会把 `wheels/` 复制进镜像并优先使用本地 wheels 安装依赖（避免从 Docker Hub/PyPI 拉取）。
+
+2) 然后构建镜像并启动（与之前相同）：
+
+```powershell
+docker compose up --build -d
+```
+
+如果你以后需要换镜像源，可以把脚本的第一个参数改为其他镜像地址，例如 `https://mirrors.aliyun.com/pypi/simple`。
+
+依赖
+
+依赖列在 `requirements.txt`，镜像构建会自动安装。常见依赖已包含：grpcio, protobuf, Flask, requests, tabulate
+
+安全 & 生产建议
+
+- admin 页面为开发工具，应仅在内网访问或加认证保护。
+- 在生产环境下，建议将 admin 与 gRPC 服务拆分为独立容器并使用外部数据库或消息队列来做任务持久化。
+ERP Demo — 管理 & 联调工具
+
+包含用于本地开发和联调的小工具：
+
+- `erp_service.py` — gRPC 服务实现（Initialization + Order）
+- `sync_store.py` — SQLite 持久化（文件：`sync_results.db`）
+- `show-sync-results.py` — CLI 表格打印最近的同步结果
+- `admin_server.py` — Flask 管理界面（`/` 查看表格，`/api/sync-results` 返回 JSON，包含联调触发按钮）
+- `sync_config.py` / `sync_runner.py` — 联调配置和脚本（读取环境变量或 sync_config.json）
+
+数据库位置
+
+`sync_results.db` 位于项目根（和 `erp_service.py` 同目录）。使用 `show-sync-results.py` 查看。
+
 启动 admin 管理页面（默认 host 127.0.0.1 port 8080）
 
 示例：
