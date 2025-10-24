@@ -10,6 +10,7 @@ services:
     volumes:
       - ./sync_results.db:/app/sync_results.db
       - ./:/app
+      - ./wheels:/app/wheels
     environment:
       - ERP_TARGET=localhost:50051
     restart: unless-stopped
@@ -30,12 +31,34 @@ services:
     volumes:
       - ./sync_results.db:/app/sync_results.db
       - ./:/app
+      - ./wheels:/app/wheels
     environment:
       - FLASK_ADMIN_HOST=0.0.0.0
       - FLASK_ADMIN_PORT=8080
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8080/api/sync-results', timeout=2)\"" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  erpgrpcreport:
+    build:
+      context: .
+      dockerfile: erpgrpcreport/Dockerfile
+    image: erpgrpcreport:latest
+    container_name: erpgrpcreport
+    ports:
+      - "8081:8081"
+    environment:
+      - ERP_TARGET=localhost:50051
+    volumes:
+      - ./sync_results.db:/app/sync_results.db
+      - ./erpgrpcreport/wheels:/app/wheels
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/health', timeout=2)\"" ]
       interval: 10s
       timeout: 3s
       retries: 5

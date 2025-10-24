@@ -1,4 +1,0 @@
-[2025-10-23 17:29:06,702] INFO: Configured host=0.0.0.0:50058 workers=10
-[2025-10-23 17:29:06,713] INFO: Starting gRPC server on 0.0.0.0:50058 (workers=10)
-[2025-10-23 17:29:08,625] INFO: SynchroSaleOrderList called with 1 bills
-[2025-10-23 17:29:08,626] INFO: Processed bill BILL-XYZ: No details to sync
